@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rollerimizi Tanıyalım</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background: url('https://images.unsplash.com/photo-1509062522246-3755977927d7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDV8fHNjaG9vbHxlbnwwfHx8fDE2OTM0NjA2MTk&ixlib=rb-4.0.3&q=80&w=1080') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1 {
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 42px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+        }
+
+        .game-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .question {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .choices {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .choice {
+            padding: 15px 30px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .choice:hover {
+            background-color: #2980b9;
+            transform: scale(1.05);
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 28px;
+            color: #27ae60;
+        }
+
+        #restartButton {
+            margin-top: 20px;
+            padding: 10px 25px;
+            font-size: 18px;
+            color: white;
+            background-color: #e74c3c;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: none;
+        }
+
+        #restartButton.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rollerimizi Tanıyalım</h1>
+    <div class="game-container">
+        <div class="question" id="question">Hangi rol doğru?</div>
+        <div class="choices" id="choices">
+            <!-- Butonlar burada dinamik olarak oluşturulacak -->
+        </div>
+        <div class="result" id="result"></div>
+        <button id="restartButton" onclick="restartGame()">Tekrar Oyna</button>
+    </div>
+
+    <script>
+        const roles = [
+            {question: "Aile içinde kimin rolü annedir?", choices: ["Anne", "Kardeş", "Başkan", "Bakkal"], correct: 0},
+            {question: "Bir okulda öğrencilerin rolü nedir?", choices: ["Öğrenci", "Yönetici", "Öğretmen", "Müdür"], correct: 0},
+            {question: "Bir sınıfta öğretmenin rolü nedir?", choices: ["Öğrenci", "Öğretmen", "Müdür", "Kapıcı"], correct: 1},
+            {question: "Bir ülkenin en önemli liderinin rolü nedir?", choices: ["Bakkal", "Başkan", "Kardeş", "Polis"], correct: 1},
+            {question: "Bir okulun en üst yöneticisi kimdir?", choices: ["Müdür", "Kapıcı", "Öğrenci", "Danışman"], correct: 0},
+            {question: "Bir ailede kimin rolü çocuklarla ilgilenmektir?", choices: ["Baba", "Abla", "Dayı", "Öğretmen"], correct: 1},
+            {question: "Bir ülkenin güvenliğinden sorumlu kimdir?", choices: ["Öğretmen", "Polis", "Doktor", "Müdür"], correct: 1},
+            {question: "Bir hastanede hastalara kim bakar?", choices: ["Doktor", "Öğrenci", "Memur", "Bakkal"], correct: 0},
+            {question: "Bir köyde köylülerin lideri kimdir?", choices: ["Muhtar", "Öğretmen", "Başkan", "Doktor"], correct: 0},
+            {question: "Bir mahallede evler arasında bağlantıyı kim sağlar?", choices: ["Postacı", "Polis", "Doktor", "Müdür"], correct: 0},
+            {question: "Bir restoranda yemekleri kim hazırlar?", choices: ["Aşçı", "Garson", "Doktor", "Müdür"], correct: 0},
+            {question: "Bir mahkemede kimin rolü adalet dağıtmaktır?", choices: ["Hakim", "Doktor", "Öğretmen", "Muhtar"], correct: 0},
+            {question: "Bir spor takımında oyunculara kim liderlik eder?", choices: ["Antrenör", "Oyuncu", "Hakim", "Müdür"], correct: 0},
+            {question: "Bir uçakta yolculara kim hizmet eder?", choices: ["Hostes", "Pilot", "Doktor", "Başkan"], correct: 0},
+            {question: "Bir fabrikada makineleri kim kullanır?", choices: ["İşçi", "Doktor", "Müdür", "Polis"], correct: 0},
+            {question: "Bir şirkette çalışanların haklarını kim korur?", choices: ["Sendika", "Müdür", "Öğretmen", "Polis"], correct: 0},
+            {question: "Bir otobüs şoförünün rolü nedir?", choices: ["Araç kullanmak", "Bilet kesmek", "Yolcuları kontrol etmek", "Servis yapmak"], correct: 0},
+            {question: "Bir kütüphanede kütüphanecinin rolü nedir?", choices: ["Kitapları düzenlemek", "Yol gösterici olmak", "Öğrenci", "Garson"], correct: 0},
+            {question: "Bir çiftçi ne yetiştirir?", choices: ["Sebze", "Kitap", "Hasta", "Araç"], correct: 0},
+            {question: "Bir bilim insanı ne yapar?", choices: ["Araştırma", "Tarım", "Ticaret", "Eğitim"], correct: 0}
+        ];
+
+        let currentRole = 0;
+        const questionEl = document.getElementById('question');
+        const resultEl = document.getElementById('result');
+        const restartButton = document.getElementById('restartButton');
+        const choicesContainer = document.getElementById('choices');
+
+        function loadRole() {
+            questionEl.innerText = roles[currentRole].question;
+            choicesContainer.innerHTML = ''; // Önceki butonları temizle
+            roles[currentRole].choices.forEach((choice, index) => {
+                const button = document.createElement('button');
+                button.classList.add('choice');
+                button.innerText = choice;
+                button.onclick = () => checkAnswer(index);
+                choicesContainer.appendChild(button);
+            });
+            resultEl.innerText = '';
+        }
+
+        function checkAnswer(index) {
+            if (index === roles[currentRole].correct) {
+                resultEl.innerText = 'Doğru!';
+                resultEl.style.color = '#27ae60';
+            } else {
+                resultEl.innerText = 'Yanlış!';
+                resultEl.style.color = '#e74c3c';
+            }
+            currentRole++;
+            if (currentRole < roles.length) {
+                setTimeout(loadRole, 1000);
+            } else {
+                setTimeout(() => {
+                    resultEl.innerText = 'Oyun Bitti!';
+                    restartButton.classList.add('show');
+                }, 1000);
+            }
+        }
+
+        function restartGame() {
+            currentRole = 0;
+            restartButton.classList.remove('show');
+            loadRole();
+        }
+
+        loadRole();
+    </script>
+</body>
+</html>
