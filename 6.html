@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Oyunu</title>
+    <style>
+        body {
+            font-family: 'Arial Black', sans-serif; /* Kalın ve okunaklı font */
+            background: url('https://tr.pinterest.com/pin/663647695077190215') no-repeat center center fixed; /* Arka plan resmi */
+            background-size: cover;
+            text-align: center;
+            padding: 0;
+            margin: 0;
+            height: 100vh; /* Tam yükseklik */
+            overflow: hidden; /* Taşmayı önle */
+        }
+        #quiz-container {
+            background-color: rgba(255, 255, 255, 0.8); /* Yarı saydam beyaz arka plan */
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 600px; /* Genişlik ayarı */
+            height: 400px; /* Yükseklik ayarı */
+            margin: auto; /* Ortala */
+            position: relative; /* İçerik yerleşimi için */
+            top: 50%; /* Ortalamak için yukarıdan konumlandır */
+            transform: translateY(-50%); /* Tam ortalamak için */
+        }
+        .question-box {
+            border-radius: 15px;
+            padding: 15px;
+            background-color: #333;
+            margin-bottom: 20px;
+            color: white; /* Yazı rengi beyaz */
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            transition: transform 0.3s ease; /* Animasyon ekle */
+            font-size: 18px; /* Font boyutu ayarı */
+            font-weight: bold; /* Kalın yazı */
+        }
+        button:hover {
+            transform: scale(1.1); /* Üzerine gelindiğinde büyüme */
+        }
+        #results {
+            display: none;
+            margin-top: 20px;
+        }
+        .rounded {
+            border-radius: 15px;
+        }
+        .feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 170px;
+            display: none; /* Başlangıçta gizli */
+            transition: transform 0.5s ease, opacity 0.5s ease; /* Animasyon ekle */
+            z-index: 10; /* Üstte görünsün */
+        }
+        .fade-in {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .fade-out {
+            opacity: 0;
+            transform: scale(0.5);
+        }
+        #timer {
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: bold; /* Kalın yazı */
+        }
+    </style>
+</head>
+<body>
+
+<audio id="background-music" loop>
+    <source src="background-music-url.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+</audio>
+
+<div id="quiz-container">
+    <h1>Quiz Oyunu</h1>
+    <div id="timer">Kalan Süre: <span id="time-left">15</span> saniye</div>
+    <div id="quiz"></div>
+    <button id="next-button">Sonraki</button>
+    <div id="results">
+        <h2>Sonuçlar</h2>
+        <p id="score"></p>
+        <button id="restart-button">Tekrar Başla</button>
+    </div>
+    <div id="feedback" class="feedback"></div>
+</div>
+
+<script>
+const allQuestions = [
+    { question: "Türkiye'nin başkenti neresidir?", options: ["Ankara", "İstanbul", "İzmir", "Bursa"], correct: 0 },
+    { question: "Dünya'nın en yüksek dağı hangisidir?", options: ["Everest", "K2", "Kangchenjunga", "Makalu"], correct: 0 },
+    { question: "Hangi gezegen Güneş'e en yakındır?", options: ["Venüs", "Merkür", "Dünya", "Mars"], correct: 1 },
+    { question: "İstanbul Boğazı hangi iki denizi birbirine bağlar?", options: ["Karadeniz ve Marmara", "Ege ve Akdeniz", "Marmara ve Ege", "Karadeniz ve Akdeniz"], correct: 0 },
+    { question: "Hangi elementin kimyasal sembolü 'O' harfidir?", options: ["Altın", "Gümüş", "Oksijen", "Demir"], correct: 2 },
+    { question: "Hangi hayvan uçabilir?", options: ["Yarasa", "Fil", "Kanguru", "Penguen"], correct: 0 },
+    { question: "Hangi kıta en fazla ülkeden oluşur?", options: ["Afrika", "Asya", "Avrupa", "Güney Amerika"], correct: 0 },
+    { question: "Dünyanın en uzun nehri hangisidir?", options: ["Nil", "Amazon", "Yangtze", "Mississippi"], correct: 1 },
+    { question: "Türkiye'nin en kalabalık şehri hangisidir?", options: ["Ankara", "İstanbul", "İzmir", "Bursa"], correct: 1 },
+    { question: "Hangi gezegen en büyük gezegendir?", options: ["Mars", "Jüpiter", "Venüs", "Satürn"], correct: 1 },
+    
+    { question: "Suyun kimyasal formülü nedir?", options: ["H2O", "CO2", "O2", "N2"], correct: 0 },
+    { question: "Hangi meyve sarı renktedir?", options: ["Elma", "Muz", "Çilek", "Kivi"], correct: 1 },
+    { question: "Hangi organ vücudun en büyük organıdır?", options: ["Karaciğer", "Cilt", "Kalp", "Beyin"], correct: 1 },
+    { question: "En çok konuşulan dil hangisidir?", options: ["İspanyolca", "İngilizce", "Çince", "Fransızca"], correct: 2 },
+    { question: "Hangi ülke, kutup ayısının doğal yaşam alanıdır?", options: ["Kanada", "Avustralya", "Brezilya", "Mısır"], correct: 0 },
+    
+    { question: "Hangi gezegen 'Kırmızı Gezegen' olarak bilinir?", options: ["Mars", "Jüpiter", "Satürn", "Venüs"], correct: 0 },
+    { question: "Hangi elementin sembolü 'Fe'dir?", options: ["Bakır", "Demir", "Altın", "Gümüş"], correct: 1 },
+    { question: "Dünya'nın uydusunun adı nedir?", options: ["Ay", "Mars", "Venüs", "Güneş"], correct: 0 },
+    { question: "Hangi spor dalında 'penaltı' vardır?", options: ["Basketbol", "Futbol", "Voleybol", "Tenis"], correct: 1 },
+    { question: "Hangi gezegen halkaları ile ünlüdür?", options: ["Jüpiter", "Mars", "Satürn", "Venüs"], correct: 2 },
+    
+    { question: "Hangi gezegenin atmosferi çok kalındır?", options: ["Venüs", "Merkür", "Dünya", "Mars"], correct: 0 },
+    { question: "Hangi dinozor türü uçabiliyordu?", options: ["T-Rex", "Velociraptor", "Pterodaktıl", "Stegosaurus"], correct: 2 },
+    { question: "Hangi sıvı içecek olarak tüketilmiyor?", options: ["Su", "Süt", "Alkol", "Asit"], correct: 3 },
+    { question: "Hangi kıtada en fazla ülke bulunmaktadır?", options: ["Asya", "Afrika", "Avrupa", "Kuzey Amerika"], correct: 1 },
+    { question: "Hangi ülke, piramitleri ile ünlüdür?", options: ["Yunanistan", "Mısır", "Çin", "Hindistan"], correct: 1 },
+    
+    { question: "Hangi hayvan 'deniz canavarı' olarak bilinir?", options: ["Balina", "Köpekbalığı", "Ahtapot", "Kedi"], correct: 1 },
+    { question: "Hangi gezegen Güneş Sistemi'nin en dışındadır?", options: ["Neptün", "Uranüs", "Satürn", "Jüpiter"], correct: 0 },
+    { question: "Hangi sanat dalı heykel yapımını içerir?", options: ["Resim", "Müzik", "Sculpting", "Tiyatro"], correct: 2 },
+    { question: "Hangi ülkede 'Şirinler' çizgi filmi doğmuştur?", options: ["Belçika", "Fransa", "Almanya", "İtalya"], correct: 0 },
+    { question: "Hangi tarihi olay 1914'te başlamıştır?", options: ["I. Dünya Savaşı", "II. Dünya Savaşı", "Kore Savaşı", "Vietnam Savaşı"], correct: 0 },
+    
+    { question: "Hangi metal altın rengindedir?", options: ["Gümüş", "Alüminyum", "Bakır", "Altın"], correct: 3 },
+    { question: "Hangi renk karıştırıldığında yeşil elde edilir?", options: ["Kırmızı ve mavi", "Mavi ve sarı", "Kırmızı ve sarı", "Siyah ve beyaz"], correct: 1 },
+    { question: "Hangi hayvan memelidir?", options: ["Kuş", "Balık", "Kedi", "Yılan"], correct: 2 },
+    { question: "Hangi gezegenin halkası yoktur?", options: ["Jüpiter", "Mars", "Merkür", "Satürn"], correct: 2 },
+    { question: "Hangi meyve suyu en popülerdir?", options: ["Portakal suyu", "Elma suyu", "Nar suyu", "Muz suyu"], correct: 0 },
+    
+    { question: "Hangi hayvan en hızlı koşan hayvandır?", options: ["At", "Çita", "Kedi", "Köpek"], correct: 1 },
+    { question: "Hangi organ insanda düşünce merkezidir?", options: ["Kalp", "Beyin", "Karaciğer", "Akciğer"], correct: 1 },
+    { question: "Hangi gezegen 'Mavi Gezegen' olarak bilinir?", options: ["Dünya", "Neptün", "Uranüs", "Jüpiter"], correct: 0 },
+    { question: "Hangi kıta en soğuk olanıdır?", options: ["Asya", "Avrupa", "Antarktika", "Kuzey Amerika"], correct: 2 },
+    { question: "Hangi çiçek en çok bilinenlerden biridir?", options: ["Gül", "Lale", "Orkide", "Papatya"], correct: 0 },
+    
+    { question: "Hangi tarihi eser, Mısır'da bulunmaktadır?", options: ["Çin Seddi", "Koloseyum", "Giza Piramitleri", "Taj Mahal"], correct: 2 },
+    { question: "Hangi meyve en fazla C vitamini içerir?", options: ["Portakal", "Limon", "Çilek", "Muz"], correct: 1 },
+    { question: "Hangi ağaç türü meyve verir?", options: ["Çam", "Köknar", "Zeytin", "Sedir"], correct: 2 },
+    { question: "Hangi içecek sıcak olarak servis edilir?", options: ["Çay", "Kola", "Su", "Süt"], correct: 0 },
+    { question: "Hangi hayvan su altında yaşayabilir?", options: ["Yarasa", "Kedi", "Balık", "Kuş"], correct: 2 },
+    
+    { question: "Hangi hayvan en uzun ömürlü olanıdır?", options: ["Filler", "Kaplumbağa", "Kediler", "Köpekler"], correct: 1 },
+    { question: "Hangi elementin sembolü 'H'dir?", options: ["Helyum", "Hidrojen", "Oksijen", "Karbon"], correct: 1 },
+    { question: "Hangi ülke kış olimpiyatlarına ev sahipliği yapmıştır?", options: ["İsviçre", "Rusya", "Kanada", "Japonya"], correct: 1 },
+    { question: "Hangi gezegen 'Çöl Gezegenidir'?", options: ["Merkür", "Mars", "Venüs", "Jüpiter"], correct: 1 },
+    { question: "Hangi ünlü yazar 'Suç ve Ceza' romanını yazmıştır?", options: ["Tolstoy", "Dostoyevski", "Çehov", "Gogol"], correct: 1 },
+    
+    { question: "Hangi müzik aleti telli bir çalgıdır?", options: ["Piyano", "Gitar", "Flüt", "Keman"], correct: 1 },
+    { question: "Hangi tatlı un ve şekerle yapılır?", options: ["Baklava", "Kek", "Pasta", "Çikolata"], correct: 0 },
+    { question: "Hangi film, bir grup gencin uzayda hayatta kalma mücadelesini anlatır?", options: ["Yıldız Savaşları", "Uzay Yolu", "Avengers", "İlk Temas"], correct: 0 },
+    { question: "Hangi kıta, Antarktika'dan sonra en soğuk olanıdır?", options: ["Asya", "Avrupa", "Kuzey Amerika", "Güney Amerika"], correct: 1 },
+    { question: "Hangi spor dalında 'smash' terimi kullanılır?", options: ["Basketbol", "Voleybol", "Futbol", "Tenis"], correct: 1 },
+    
+    { question: "Hangi gezegenin yüzeyi su ile kaplıdır?", options: ["Mars", "Dünya", "Jüpiter", "Satürn"], correct: 1 },
+    { question: "Hangi hayvan denizde yaşayan bir memelidir?", options: ["Kedi", "Balina", "Kuş", "Sırtlan"], correct: 1 },
+    { question: "Hangi kıtanın en yüksek noktası Everest'tir?", options: ["Asya", "Avrupa", "Afrika", "Kuzey Amerika"], correct: 0 },
+    { question: "Hangi tarihi eser, Roma'da bulunmaktadır?", options: ["Koloseyum", "Mısır Piramitleri", "Taj Mahal", "Stonehenge"], correct: 0 },
+    { question: "Hangi meyve en çok su içerir?", options: ["Karpuz", "Muz", "Çilek", "Elma"], correct: 0 },
+
+    { question: "Hangi gün hafta sonunda yer alır?", options: ["Pazartesi", "Salı", "Cuma", "Cumartesi"], correct: 3 },
+    { question: "Hangi renk, siyah ile beyaz karıştırıldığında elde edilir?", options: ["Gri", "Kahverengi", "Mavi", "Sarı"], correct: 0 },
+    { question: "Hangi su canlısı deniz yıldızıdır?", options: ["Köpekbalığı", "Kedi", "Ahtapot", "Yıldız"], correct: 3 },
+    { question: "Hangi meyve turuncu renktedir?", options: ["Elma", "Portakal", "Muz", "Kivi"], correct: 1 },
+    { question: "Hangi ülke en çok nükleer enerji üretmektedir?", options: ["Fransa", "Amerika", "Almanya", "Çin"], correct: 0 },
+
+    { question: "Hangi sanat dalında 'bale' vardır?", options: ["Müzik", "Resim", "Dans", "Tiyatro"], correct: 2 },
+    { question: "Hangi spor dalında en fazla madalya kazanılmaktadır?", options: ["Yüzme", "Atletizm", "Futbol", "Basketbol"], correct: 0 },
+    { question: "Hangi bilim dalı bitkileri inceler?", options: ["Zooloji", "Botanik", "Mikrobiyoloji", "Fizik"], correct: 1 },
+    { question: "Hangi hayvan en büyük memelidir?", options: ["Balina", "Filler", "Kediler", "Köpekler"], correct: 0 },
+    { question: "Hangi gezegen 'Dünya'nın kardeşidir'?", options: ["Mars", "Venüs", "Jüpiter", "Merkür"], correct: 1 },
+
+    { question: "Hangi öğün günde bir kez yenir?", options: ["Kahvaltı", "Öğle Yemeği", "Akşam Yemeği", "İkindi Kahvaltısı"], correct: 3 },
+    { question: "Hangi film, uzayda geçen bir macerayı anlatır?", options: ["Yıldız Savaşları", "Avengers", "Titanik", "Kayıp Balık Nemo"], correct: 0 },
+    { question: "Hangi gezegen, en çok uydusu olan gezegendir?", options: ["Jüpiter", "Satürn", "Mars", "Merkür"], correct: 0 },
+    { question: "Hangi tatlı, un ve şeker ile yapılır?", options: ["Baklava", "Kek", "Pasta", "Çikolata"], correct: 0 },
+    { question: "Hangi gün, hafta ortasıdır?", options: ["Pazartesi", "Salı", "Çarşamba", "Perşembe"], correct: 2 },
+
+    { question: "Hangi ağaç, zeytin meyvesi verir?", options: ["Zeytin", "Kavak", "Çam", "Sedir"], correct: 0 },
+    { question: "Hangi ülke, piza kulesi ile ünlüdür?", options: ["İtalya", "Fransa", "İspanya", "Almanya"], correct: 0 },
+    { question: "Hangi meyve, tropikal bir meyvedir?", options: ["Elma", "Muz", "Karpuz", "Çilek"], correct: 1 },
+    { question: "Hangi renk, sarı ve mavi karıştırıldığında elde edilir?", options: ["Yeşil", "Kahverengi", "Mor", "Turuncu"], correct: 0 },
+    { question: "Hangi spor, su üzerinde yapılır?", options: ["Kayak", "Sörf", "Bisiklet", "Koşu"], correct: 1 },
+
+    { question: "Hangi tarihi olay 1929'da gerçekleşmiştir?", options: ["Büyük Buhran", "İkinci Dünya Savaşı", "Kore Savaşı", "Vietnam Savaşı"], correct: 0 },
+    { question: "Hangi gezegenin yüzeyi su ile kaplıdır?", options: ["Merkür", "Venüs", "Mars", "Dünya"], correct: 3 },
+    { question: "Hangi meyve en çok A vitamini içerir?", options: ["Havuç", "Portakal", "Muz", "Karpuz"], correct: 0 },
+    { question: "Hangi hayvan, kırmızı renkte bir peluşa sahiptir?", options: ["Kırmızı Panda", "Kırmızı Duygu", "Kırmızı Kedi", "Kırmızı Köpek"], correct: 0 },
+    { question: "Hangi spor dalında en çok kırmızı kart görülür?", options: ["Futbol", "Basketbol", "Hokey", "Voleybol"], correct: 0 },
+
+    { question: "Hangi ülke, dünyanın en kalabalık nüfusuna sahiptir?", options: ["Çin", "Hindistan", "Amerika", "Brezilya"], correct: 0 },
+    { question: "Hangi sanat dalı, seslerle yapılan bir ifade biçimidir?", options: ["Resim", "Müzik", "Sculpting", "Edebiyat"], correct: 1 },
+    { question: "Hangi tarihi eser, Yunanistan'da bulunmaktadır?", options: ["Parthenon", "Çin Seddi", "Kolezyum", "Taj Mahal"], correct: 0 },
+    { question: "Hangi spor dalında topa ayakla vurulur?", options: ["Basketbol", "Futbol", "Voleybol", "Hokey"], correct: 1 },
+    { question: "Hangi çiçek, genellikle kırmızı renktedir?", options: ["Gül", "Lale", "Orkide", "Papatya"], correct: 0 },
+    
+    { question: "Hangi yemek, genellikle kahvaltıda yenir?", options: ["Pasta", "Yumurta", "Pizza", "Makarna"], correct: 1 },
+    { question: "Hangi gezegenin atmosferi kalındır?", options: ["Merkür", "Venüs", "Dünya", "Mars"], correct: 1 },
+    { question: "Hangi ağaç, meyve verir?", options: ["Çam", "Kavak", "Zeytin", "Sedir"], correct: 2 },
+    { question: "Hangi hayvan, havada uçar?", options: ["Yarasa", "Kedi", "Köpek", "Kaplumbağa"], correct: 0 },
+    { question: "Hangi gün, haftanın ilk günüdür?", options: ["Cumartesi", "Pazar", "Pazartesi", "Salı"], correct: 2 },
+    
+    { question: "Hangi meyve, tropikal bir meyvedir?", options: ["Muz", "Elma", "Karpuz", "Çilek"], correct: 0 },
+    { question: "Hangi renk, mavi ve yeşil karıştırıldığında elde edilir?", options: ["Turkuaz", "Siyah", "Kahverengi", "Mor"], correct: 0 },
+    { question: "Hangi metal en hafif olanıdır?", options: ["Alüminyum", "Demir", "Bakır", "Altın"], correct: 0 },
+    { question: "Hangi çiçek, genellikle sarı renktedir?", options: ["Papatya", "Orkide", "Gül", "Lale"], correct: 0 },
+    { question: "Hangi tatlı, süt ile yapılır?", options: ["Baklava", "Kek", "Sütlaç", "Pasta"], correct: 2 }
+];
+
+
+let currentQuestionIndex = 0;
+let score = 0;
+let answeredQuestions = [];
+let timer;
+let timeLeft = 60;
+
+const feedback = document.getElementById('feedback');
+const music = document.getElementById('background-music');
+music.play(); // Müziği başlat
+
+function displayQuestion() {
+    const quizContainer = document.getElementById('quiz');
+    quizContainer.innerHTML = '';
+
+    if (currentQuestionIndex < answeredQuestions.length) {
+        const question = answeredQuestions[currentQuestionIndex];
+        const questionBox = document.createElement('div');
+        questionBox.classList.add('question-box', 'rounded');
+        questionBox.innerHTML = `<p>${question.question}</p>`;
+        
+        const optionsContainer = document.createElement('div');
+        optionsContainer.classList.add('options');
+
+        question.options.forEach((option, index) => {
+            const button = document.createElement('button');
+            button.innerText = option;
+            button.onclick = () => checkAnswer(index);
+            optionsContainer.appendChild(button);
+        });
+
+        questionBox.appendChild(optionsContainer);
+        quizContainer.appendChild(questionBox);
+    } else {
+        showResults();
+    }
+}
+
+function checkAnswer(selectedIndex) {
+    const question = answeredQuestions[currentQuestionIndex];
+    if (selectedIndex === question.correct) {
+        score++;
+        showFeedback('', 'green'); // Doğru cevap
+    } else {
+        showFeedback('', 'red'); // Yanlış cevap
+    }
+    currentQuestionIndex++;
+    setTimeout(displayQuestion, 1000); // 1 saniye sonra bir sonraki soruyu göster
+}
+
+function showFeedback(symbol, color) {
+    feedback.innerText = symbol;
+    feedback.style.color = color;
+    feedback.style.display = 'block';
+    feedback.classList.add('fade-in');
+    setTimeout(() => {
+        feedback.classList.remove('fade-in');
+        feedback.classList.add('fade-out');
+    }, 1000); // 1 saniye göster
+    setTimeout(() => {
+        feedback.style.display = 'none';
+        feedback.classList.remove('fade-out');
+    }, 1500); // 1.5 saniye sonra gizle
+}
+
+function showResults() {
+    clearInterval(timer); // Zamanlayıcıyı durdur
+    document.getElementById('quiz').style.display = 'none';
+    document.getElementById('next-button').style.display = 'none';
+    const resultsContainer = document.getElementById('results');
+    resultsContainer.style.display = 'block';
+    document.getElementById('score').innerText = `Doğru: ${score}, Yanlış: ${currentQuestionIndex - score}`;
+}
+
+function startQuiz() {
+    currentQuestionIndex = 0;
+    score = 0;
+    answeredQuestions = getRandomQuestions(100, allQuestions, 20);
+    timeLeft = 15; // Zamanlayıcıyı sıfırla
+    displayQuestion();
+    startTimer();
+}
+
+function getRandomQuestions(totalQuestions, questionsArray, numToPick) {
+    const shuffled = questionsArray.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, numToPick);
+}
+
+function startTimer() {
+    const timeDisplay = document.getElementById('time-left');
+    timer = setInterval(() => {
+        timeLeft--;
+        timeDisplay.innerText = timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            showResults(); // Zaman dolduğunda sonuçları göster
+        }
+    }, 1000);
+}
+
+document.getElementById('next-button').onclick = () => {
+    currentQuestionIndex++;
+    displayQuestion();
+};
+
+document.getElementById('restart-button').onclick = () => {
+    startQuiz();
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('quiz').style.display = 'block';
+};
+
+startQuiz();
+</script>
+
+</body>
+</html>
