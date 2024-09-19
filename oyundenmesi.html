@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kültür Bilgi Yarışması</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: url('https://images.unsplash.com/photo-1509062522246-3755977927d7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDV8fHNjaG9vbHxlbnwwfHx8fDE2OTM0NjA2MTk&ixlib=rb-4.0.3&q=80&w=1080') no-repeat center center fixed;
+            background-size: cover;
+            position: relative;
+        }
+
+        .quiz-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            z-index: 1; /* Üstte görünmesini sağlar */
+        }
+
+        .header-rectangle {
+            position: absolute;
+            top: 20px; /* Başlığın en üstte olmasını sağlar */
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            z-index: 0; /* Quiz container'ın altına yerleştirir */
+        }
+
+        .header-rectangle .timer {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header-rectangle .timer.warning {
+            color: red;
+            animation: blink 1s step-start infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .question {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 20px 0;
+            color: #444;
+        }
+
+        .choices button {
+            background: #3498db;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            margin: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .choices button:hover {
+            background: #2980b9;
+            transform: scale(1.05);
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: 600;
+            color: #2ecc71;
+            position: relative;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 150px; /* Büyük tik ve çarpı işaretleri */
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            border-radius: 50%;
+            padding: 40px;
+            background-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .icon.tick {
+            color: #2ecc71;
+        }
+
+        .icon.cross {
+            color: #e74c3c;
+        }
+
+        .icon.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.5);
+        }
+
+        @keyframes tickAnimation {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @keyframes crossAnimation {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .icon.tick.show {
+            animation: tickAnimation 1s forwards;
+        }
+
+        .icon.cross.show {
+            animation: crossAnimation 1s forwards;
+        }
+
+        .link {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 16px;
+            color: #333;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-rectangle">
+        Kültür Bilgi Yarışması
+        <div class="timer" id="timer">15</div>
+    </div>
+    <div class="quiz-container">
+        <div class="question" id="question">Soru burada görünecek</div>
+        <div class="choices" id="choices">
+            <button onclick="checkAnswer(0)">Seçenek 1</button>
+            <button onclick="checkAnswer(1)">Seçenek 2</button>
+            <button onclick="checkAnswer(2)">Seçenek 3</button>
+            <button onclick="checkAnswer(3)">Seçenek 4</button>
+        </div>
+        <div class="result hidden" id="result">Sonuç burada görünecek</div>
+        <div class="icon tick hidden" id="tick">&#10003;</div>
+        <div class="icon cross hidden" id="cross">&#10007;</div>
+        <a href="https://github.com/Merttilki/Sosyal_Bilgiler_proje" class="link" target="_blank">GitHub Proje Linki</a>
+    </div>
+
+    <audio id="wrong-sound" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
+
+    <script>
+        const questions = [
+            {question: "Türk bayrağında bulunan renkler nelerdir?", choices: ["Kırmızı ve Beyaz", "Mavi ve Beyaz", "Yeşil ve Beyaz", "Sarı ve Siyah"], correct: 0},
+            {question: "Hangi şehir Türkiye'nin başkentidir?", choices: ["İstanbul", "Ankara", "İzmir", "Antalya"], correct: 1},
+            {question: "Ünlü Türk şairi Nazım Hikmet hangi alanda tanınır?", choices: ["Mimarlık", "Edebiyat", "Spor", "Müzik"], correct: 1},
+            {question: "Türk mutfağının ünlü tatlısı hangisidir?", choices: ["Baklava", "Tiramisu", "Cheesecake", "Puding"], correct: 0},
+            {question: "Hangi yapı İstanbul'da bulunur?", choices: ["Eiffel Kulesi", "Ayasofya", "Özgürlük Anıtı", "Big Ben"], correct: 1},
+            {question: "Türkiye'nin en uzun nehri hangisidir?", choices: ["Kızılırmak", "Fırat", "Sakarya", "Dicle"], correct: 0},
+            {question: "Hangi padişah İstanbul'u fethetmiştir?", choices: ["Kanuni Sultan Süleyman", "Yavuz Sultan Selim", "Fatih Sultan Mehmet", "III. Murat"], correct: 2},
+            {question: "Türklerin geleneksel müzik aletlerinden biri hangisidir?", choices: ["Piyano", "Gitar", "Saz", "Keman"], correct: 2},
+            {question: "Hangi içecek Türk kültüründe önemli bir yere sahiptir?", choices: ["Kahve", "Çay", "Soda", "Meyve suyu"], correct: 1},
+            {question: "Türk mutfağında 'kısır' hangi malzemeyle yapılır?", choices: ["Pirinç", "Bulgur", "Makarna", "Ekmek"], correct: 1},
+            {question: "Türk kültüründe hangi yiyecek kahvaltı sofralarının vazgeçilmezidir?", choices: ["Zeytin", "Ekmek", "Köfte", "Börek"], correct: 0},
+            {question: "Türkiye'nin hangi bölgesinde 'Kapadokya' yer alır?", choices: ["Karadeniz", "Marmara", "Ege", "Orta Anadolu"], correct: 3},
+            {question: "Türk müziğinin önemli isimlerinden biri kimdir?", choices: ["Candan Erçetin", "Tarkan", "Sezen Aksu", "Kenan Doğulu"], correct: 2},
+            {question: "Türk kültüründe hangi tatlı sıcak olarak servis edilir?", choices: ["Baklava", "Sütlaç", "Kadayıf", "Lokum"], correct: 2},
+            {question: "Türk tarihinde önemli bir yere sahip olan 'Kurtuluş Savaşı' hangi yıllarda gerçekleşmiştir?", choices: ["1914-1918", "1919-1922", "1939-1945", "1960-1963"], correct: 1},
+            {question: "Hangi geleneksel Türk içeceği 'çay' olarak bilinir?", choices: ["Süt", "Kahve", "Çay", "Limonata"], correct: 2},
+            {question: "Hangi ünlü Türk yazar 'İnce Memed' adlı kitabı yazmıştır?", choices: ["Orhan Pamuk", "Yaşar Kemal", "Ahmet Hamdi Tanpınar", "Oğuz Atay"], correct: 1},
+            {question: "Türkiye'nin en büyük gölü hangisidir?", choices: ["Van Gölü", "Burdur Gölü", "Tuz Gölü", "Sapanca Gölü"], correct: 0},
+            {question: "Türk milletinin kurucusu kimdir?", choices: ["Mustafa Kemal Atatürk", "İsmet İnönü", "Suleyman Hilmi", "Enver Paşa"], correct: 0},
+            {question: "Hangi geleneksel Türk müzik aleti tellidir?", choices: ["Gitar", "Keman", "Saz", "Piyano"], correct: 2},
+            {question: "Türk halk müziğinin önemli sanatçılarından biri kimdir?", choices: ["Candan Erçetin", "Müslüm Gürses", "Sıla", "Tarkan"], correct: 1},
+            {question: "Türk kültüründe hangi bayram 'Ramazan Bayramı' olarak bilinir?", choices: ["Şeker Bayramı", "Kurban Bayramı", "Hıdırellez", "Nevruz"], correct: 0},
+            {question: "Hangi ünlü Türk futbol kulübü 'Sarı-Kırmızı' renklere sahiptir?", choices: ["Fenerbahçe", "Galatasaray", "Beşiktaş", "Trabzonspor"], correct: 1},
+            {question: "Hangi ünlü Türk sanatçı 'Aşk' adlı şarkıyı seslendirmiştir?", choices: ["Sertab Erener", "Tarkan", "Kenan Doğulu", "Berkay"], correct: 1},
+            {question: "Türkiye'nin hangi şehri 'Büyükçekmece' ile tanınır?", choices: ["İstanbul", "Ankara", "İzmir", "Bursa"], correct: 0},
+            {question: "Türk kültüründe önemli bir yere sahip olan geleneksel müzik aleti hangisidir?", choices: ["Gitar", "Piyano", "Keman", "Saz"], correct: 3},
+            {question: "Hangi ünlü Türk sanatçı 'İstanbul' adlı şarkıyı söylemiştir?", choices: ["Tarkan", "Sezen Aksu", "Kenan Doğulu", "Ajda Pekkan"], correct: 1},
+            {question: "Türkiye'nin en yüksek dağı hangisidir?", choices: ["Ararat Dağı", "Erciyes Dağı", "Süphan Dağı", "Kaçkar Dağı"], correct: 0},
+            {question: "Türk tarihinde önemli bir yer tutan savaşlardan hangisi Çanakkale'de gerçekleşmiştir?", choices: ["Kurtuluş Savaşı", "Çanakkale Savaşı", "Sakarya Meydan Muharebesi", "Dumlupınar Meydan Muharebesi"], correct: 1}
+        ];
+
+        let currentQuestionIndex = 0;
+        let timeLeft = 15;
+        let timer;
+
+        function loadQuestion() {
+            const currentQuestion = questions[currentQuestionIndex];
+            document.getElementById("question").innerText = currentQuestion.question;
+            const choicesButtons = document.querySelectorAll(".choices button");
+            choicesButtons.forEach((button, index) => {
+                button.innerText = currentQuestion.choices[index];
+            });
+            document.getElementById("result").classList.add("hidden");
+            document.getElementById("tick").classList.add("hidden");
+            document.getElementById("cross").classList.add("hidden");
+
+            timeLeft = 15;
+            document.getElementById("timer").innerText = timeLeft;
+            document.getElementById("timer").classList.remove("warning");
+
+            clearInterval(timer);
+            timer = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            document.getElementById("timer").innerText = timeLeft;
+            if (timeLeft <= 5) {
+                document.getElementById("timer").classList.add("warning");
+            }
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                checkAnswer(-1); // Geçersiz seçim, zaman doldu
+            }
+        }
+
+        function checkAnswer(choice) {
+            const correctChoice = questions[currentQuestionIndex].correct;
+            const resultElement = document.getElementById("result");
+            const tickElement = document.getElementById("tick");
+            const crossElement = document.getElementById("cross");
+            const wrongSound = document.getElementById("wrong-sound");
+
+            if (choice === correctChoice) {
+                resultElement.innerText = "Doğru!";
+                tickElement.classList.remove("hidden");
+                tickElement.classList.add("show");
+                setTimeout(() => tickElement.classList.remove("show"), 1000);
+            } else if (choice !== -1) {
+                resultElement.innerText = "Yanlış!";
+                crossElement.classList.remove("hidden");
+                crossElement.classList.add("show");
+                wrongSound.play(); // Çarpı işareti sesi
+                setTimeout(() => crossElement.classList.remove("show"), 1000);
+            } else {
+                resultElement.innerText = "Süre Doldu!";
+                crossElement.classList.remove("hidden");
+                crossElement.classList.add("show");
+                setTimeout(() => crossElement.classList.remove("show"), 1000);
+            }
+
+            resultElement.classList.remove("hidden");
+            setTimeout(() => {
+                resultElement.classList.add("hidden");
+                currentQuestionIndex = (currentQuestionIndex + 1) % questions.length;
+                loadQuestion();
+            }, 1500);
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
